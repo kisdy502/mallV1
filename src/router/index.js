@@ -18,7 +18,6 @@ export const constantRouterMap = [
       component: () => import('@/views/Home.vue'),
       meta: { title: '首页', icon: 'home' }
     }],
-    hidden: false,
   }
 ]
 
@@ -47,6 +46,7 @@ export const asyncRouterMap = [
         name: 'allocMenu',
         component: () => import('@/views/ums/role/allocMenu.vue'),
         meta: { title: '分配菜单' },
+        hidden: true
       },
       {
         path: 'allocResource',
@@ -81,7 +81,6 @@ export const asyncRouterMap = [
         name: 'resource',
         component: () => import('@/views/ums/resource/resource.vue'),
         meta: { title: '资源列表', icon: 'ums-resource' },
-        hidden: true
       },
       {
         path: 'resourceCategory',

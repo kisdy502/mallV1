@@ -75,6 +75,6 @@ export function allocRole(data) {
   return request({
     url: '/admin/role/update',
     method: 'post',
-    data: data
+    params: data
   })
 }
