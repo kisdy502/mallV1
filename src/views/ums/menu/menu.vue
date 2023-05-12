@@ -3,7 +3,7 @@
     <el-card class="operate-container" shadow="never">
       <i class="el-icon-tickets" style="margin-top: 5px"></i>
       <span style="margin-top: 5px">数据列表</span>
-      <el-button class="btn-add" @click="handleAddMenu()" size="small" type="primary">
+      <el-button class="btn-add" @click="handleAddMenu()" size="small">
         添加
       </el-button>
     </el-card>
@@ -51,6 +51,12 @@
           </template>
         </el-table-column>
       </el-table>
+    </div>
+    <div class="pagination-container">
+      <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
+        layout="total, sizes,prev, pager, next,jumper" :page-size="listQuery.pageSize" :page-sizes="[10, 15, 20]"
+        :current-page.sync="listQuery.pageNum" :total="parseInt(total)">
+      </el-pagination>
     </div>
   </div>
 </template>
@@ -137,6 +143,34 @@ export default {
         });
         this.getList();
       });
+    },
+    handleUpdate(index, row) {
+      this.$router.push({ path: '/ums/updateMenu', query: { id: row.id } });
+    },
+    handleDelete(index, row) {
+      this.$confirm('是否要删除该菜单', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteMenu(row.id).then(response => {
+          this.$message({
+            message: '删除成功',
+            type: 'success',
+            duration: 1000
+          });
+          this.getList();
+        });
+      });
+    },
+    handleSizeChange(val) {
+      this.listQuery.pageNum = 1;
+      this.listQuery.pageSize = val;
+      this.getList();
+    },
+    handleCurrentChange(val) {
+      this.listQuery.pageNum = val;
+      this.getList();
     },
   },
   watch: {

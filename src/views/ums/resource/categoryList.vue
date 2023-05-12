@@ -1,75 +1,129 @@
 <template>
-  <el-radio-group v-model="isCollapse" style="margin-bottom: 20px">
-    <el-radio-button :label="false">expand</el-radio-button>
-    <el-radio-button :label="true">collapse</el-radio-button>
-  </el-radio-group>
-  <el-menu default-active="2" class="el-menu-vertical-demo" :collapse="isCollapse" @open="handleOpen"
-    @close="handleClose">
-    <el-sub-menu index="1">
-      <template #title>
-        <el-icon>
-          <location />
-        </el-icon>
-        <span>Navigator One</span>
+  <div class="app-container">
+    <el-card shadow="never" class="operate-container">
+      <i class="el-icon-tickets"></i>
+      <span>数据列表</span>
+      <el-button size="small" class="btn-add" @click="handleAdd()">添加</el-button>
+    </el-card>
+    <div class="table-container">
+      <el-table ref="resourceCategoryTable" :data="list" style="width: 100%;" v-loading="listLoading" border>
+        <el-table-column label="编号" width="100" align="center">
+          <template #default="scope">{{ scope.row.id }}</template>
+        </el-table-column>
+        <el-table-column label="名称" align="center">
+          <template #default="scope">{{ scope.row.name }}</template>
+        </el-table-column>
+        <el-table-column label="创建时间" align="center">
+          <template #default="scope">{{ formatDateTime(scope.row.createTime) }}</template>
+        </el-table-column>
+        <el-table-column label="排序" align="center">
+          <template #default="scope">{{ scope.row.sort }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" align="center">
+          <template #default="scope">
+            <el-button size="small" type="primary" link @click="handleUpdate(scope.$index, scope.row)">编辑
+            </el-button>
+            <el-button size="small" type="primary" link @click="handleDelete(scope.$index, scope.row)">删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <el-dialog :title="isEdit ? '编辑分类' : '添加分类'" v-model="dialogVisible" width="40%">
+      <el-form :model="resourceCategory" ref="resourceCategoryForm" label-width="150px" size="small">
+        <el-form-item label="名称：">
+          <el-input v-model="resourceCategory.name" style="width: 250px"></el-input>
+        </el-form-item>
+        <el-form-item label="排序：">
+          <el-input v-model="resourceCategory.sort" style="width: 250px"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="handleDialogConfirm()" size="small">确 定</el-button>
+        </span>
       </template>
-      <el-menu-item-group>
-        <template #title><span>Group One</span></template>
-        <el-menu-item index="1-1">item one</el-menu-item>
-        <el-menu-item index="1-2">item two</el-menu-item>
-      </el-menu-item-group>
-      <el-menu-item-group title="Group Two">
-        <el-menu-item index="1-3">item three</el-menu-item>
-      </el-menu-item-group>
-      <el-sub-menu index="1-4">
-        <template #title><span>item four</span></template>
-        <el-menu-item index="1-4-1">item one</el-menu-item>
-      </el-sub-menu>
-    </el-sub-menu>
-    <el-menu-item index="2">
-      <el-icon><icon-menu /></el-icon>
-      <template #title>Navigator Two</template>
-    </el-menu-item>
-    <el-menu-item index="3" disabled>
-      <el-icon>
-        <document />
-      </el-icon>
-      <template #title>Navigator Three</template>
-    </el-menu-item>
-    <el-menu-item index="4">
-      <el-icon>
-        <setting />
-      </el-icon>
-      <template #title>Navigator Four</template>
-    </el-menu-item>
-  </el-menu>
+    </el-dialog>
+  </div>
 </template>
 
-<script lang="ts" setup>
-import { ref ,onMounted,computed} from 'vue'
-import {
-  Document,
-  Menu as IconMenu,
-  Location,
-  Setting,
-} from '@element-plus/icons-vue'
+<script>
+import { listAllCate, createResourceCategory, updateResourceCategory, deleteResourceCategory } from '@/api/resourceCategory';
+import { formatDate } from '@/utils/date';
+const defaultResourceCategory = {
+  name: null,
+  sort: 0
+};
 
-
-onMounted(() => {
-  console.log("Commpontent 挂载");
-})
-
-const isCollapse = ref(true)
-const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
-}
-const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
+export default {
+  name: 'resourceCategoryList',
+  data() {
+    return {
+      list: null,
+      listLoading: false,
+      dialogVisible: false,
+      isEdit: false,
+      resourceCategory: Object.assign({}, defaultResourceCategory)
+    }
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    formatDateTime: function (time) {
+      if (time == null || time === '') {
+        return 'N/A';
+      }
+      let date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
+    },
+    handleAdd() {
+      this.dialogVisible = true;
+      this.isEdit = false;
+      this.resourceCategory = Object.assign({}, defaultResourceCategory);
+    },
+    handleUpdate(index, row) {
+      this.dialogVisible = true;
+      this.isEdit = true;
+      this.resourceCategory = Object.assign({}, row);
+    },
+    getList() {
+      this.listLoading = true;
+      listAllCate({}).then(response => {
+        this.listLoading = false;
+        this.list = response.data;
+      });
+    },
+    handleDialogConfirm() {
+      this.$confirm('是否要确认?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        if (this.isEdit) {
+          updateResourceCategory(this.resourceCategory.id, this.resourceCategory).then(response => {
+            this.$message({
+              message: '修改成功！',
+              type: 'success'
+            });
+            this.dialogVisible = false;
+            this.getList();
+          })
+        } else {
+          createResourceCategory(this.resourceCategory).then(response => {
+            this.$message({
+              message: '添加成功！',
+              type: 'success'
+            });
+            this.dialogVisible = false;
+            this.getList();
+          })
+        }
+      })
+    },
+  }
 }
 </script>
 
-<style>
-.el-menu-vertical-demo:not(.el-menu--collapse) {
-  width: 200px;
-  min-height: 400px;
-}
-</style>
+<style></style>
