@@ -1,36 +1,160 @@
 <template>
-  <div class="mb-2 flex items-center text-sm">
-    <el-radio-group v-model="radio1" class="ml-4">
-      <el-radio label="1" size="large">Option 1</el-radio>
-      <el-radio label="2" size="large">Option 2</el-radio>
-    </el-radio-group>
-  </div>
-  <div class="my-2 flex items-center text-sm">
-    <el-radio-group v-model="radio2" class="ml-4">
-      <el-radio label="1">Option 1</el-radio>
-      <el-radio label="2">Option 2</el-radio>
-    </el-radio-group>
-  </div>
-  <div class="my-4 flex items-center text-sm">
-    <el-radio-group v-model="radio3" class="ml-4">
-      <el-radio label="1" size="small">Option 1</el-radio>
-      <el-radio label="2" size="small">Option 2</el-radio>
-    </el-radio-group>
-  </div>
-  <div class="mb-2 flex items-center text-sm">
-    <el-radio-group v-model="radio3" disabled class="ml-4">
-      <el-radio label="1" size="small">Option 1</el-radio>
-      <el-radio label="2" size="small">Option 2</el-radio>
-      <el-radio label="3" size="small">Option 3</el-radio>
-      <el-radio label="4" size="small">Option 4</el-radio>
-    </el-radio-group>
+  <div class="app-container">
+    <el-card class="operate-container" shadow="never">
+      <i class="el-icon-tickets" style="margin-top: 5px"></i>
+      <span style="margin-top: 5px">数据列表</span>
+      <el-button class="btn-add" @click="handleAddMenu()" size="small" type="primary">
+        添加
+      </el-button>
+    </el-card>
+
+    <div class="table-container">
+      <el-table ref="menuTable" style="width: 100%" :data="list" v-loading="listLoading" border>
+        <el-table-column label="编号" width="100" align="center">
+          <template #default="scope">{{ scope.row.id }}</template>
+        </el-table-column>
+        <el-table-column label="菜单名称" align="center">
+          <template #default="scope">{{ scope.row.title }}</template>
+        </el-table-column>
+        <el-table-column label="菜单级数" width="100" align="center" :formatter="levelFilter">
+          <!-- <template #default="scope">{{ scope.row.level|levelFilter }}</template> -->
+        </el-table-column>
+        <el-table-column label="前端名称" align="center">
+          <template #default="scope">{{ scope.row.name }}</template>
+        </el-table-column>
+        <el-table-column label="前端图标" width="100" align="center">
+          <template #default="scope"><svg-icon :name="scope.row.icon"></svg-icon></template>
+        </el-table-column>
+        <el-table-column label="是否显示" width="100" align="center">
+          <template #default="scope">
+            <el-switch @change="handleHiddenChange(scope.$index, scope.row)" :active-value="0" :inactive-value="1"
+              v-model="scope.row.hidden">
+            </el-switch>
+          </template>
+        </el-table-column>
+        <el-table-column label="排序" width="100" align="center">
+          <template #default="scope">{{ scope.row.sort }}</template>
+        </el-table-column>
+        <el-table-column label="设置" width="120" align="center">
+          <template #default="scope">
+            <el-button size="small" type="primary" :disabled="disableNextLevel(scope.row.level)"
+              @click="handleShowNextLevel(scope.$index, scope.row)">查看下级
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" align="center">
+          <template #default="scope">
+            <el-button size="small" link type="primary" @click="handleUpdate(scope.$index, scope.row)">编辑
+            </el-button>
+            <el-button size="small" link type="primary" @click="handleDelete(scope.$index, scope.row)">删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref } from 'vue'
+<script>
+import { fetchList, deleteMenu, updateMenu, updateHidden } from '@/api/menu'
+export default {
+  name: "menuList",
+  data() {
+    return {
+      list: null,
+      total: null,
+      listLoading: true,
+      listQuery: {
+        pageNum: 1,
+        pageSize: 5
+      },
+      parentId: 0
+    }
+  },
+  created() {
+    this.resetParentId();
+    this.getList();
+  },
+  methods: {
+    getList() {
+      this.listLoading = true;
+      fetchList(this.parentId, this.listQuery).then(response => {
+        this.listLoading = false;
+        this.list = response.data.list;
+        this.total = response.data.total;
+      }, error => {
+        console.log("请求出错:" + error)
+        this.listLoading = false;
+        this.list = null;
+        this.total = 0;
+        this.$message({
+          type: 'error',
+          message: '接口出错:' + error.message
+        });
+      });
+    },
+    resetParentId() {
+      this.listQuery.pageNum = 1;
+      if (this.$route.query.parentId != null) {
+        this.parentId = this.$route.query.parentId;
+      } else {
+        this.parentId = 0;
+      }
+    },
+    handleShowNextLevel(index, row) {
+      this.$router.push({ path: '/ums/menu', query: { parentId: row.id } })
+    },
+    handleAddMenu() {
+      this.$router.push('/ums/addMenu');
+    },
+    levelFilter(row, column) {
+      if (row.level === 0) {
+        return '一级';
+      } else if (row.level === 1) {
+        return '二级';
+      }
+    },
+    disableNextLevel(value) {
+      if (value === 0) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    handleHiddenChange(index, row) {
+      updateHidden(row.id, { hidden: row.hidden }).then(response => {
+        this.$message({
+          message: '修改成功',
+          type: 'success',
+          duration: 1000
+        });
+      }, error => {
+        console.log("请求出错:" + error)
+        this.listLoading = false;
+        this.$message({
+          type: 'error',
+          message: '接口出错:' + error.message
+        });
+        this.getList();
+      });
+    },
+  },
+  watch: {
+    $route(route) {
+      this.resetParentId();
+      this.getList();
+    }
+  },
+  filters: {
 
-const radio1 = ref('1')
-const radio2 = ref('1')
-const radio3 = ref('3')
+    disableNextLevel(value) {
+      if (value === 0) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  }
+}
+
 </script>

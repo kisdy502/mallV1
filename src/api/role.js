@@ -36,7 +36,7 @@ export function deleteRole(data) {
     return request({
         url: '/role/delete',
         method: 'post',
-        data: data
+        params: data
     })
 }
 
@@ -73,6 +73,6 @@ export function allocResource(data) {
     return request({
         url: '/role/allocResource',
         method: 'post',
-        data: data
+        params: data
     })
 }

@@ -37,3 +37,8 @@ npm install sass --save-dev
 
 npm install vite-plugin-svg-icons -D
 npm install  fast-glob -D
+
+
+## 测试时，端口开启
+firewall-cmd --zone=public --add-port=5173/tcp --permanent
+firewall-cmd --reload

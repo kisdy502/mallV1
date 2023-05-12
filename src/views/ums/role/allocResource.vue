@@ -1,98 +1,189 @@
 <template>
-  <div id="app">
-    <el-menu mode="vertical" :show-timeout="200" :default-active="$route.path" :collapse="isCollapse"
-      background-color="#304156" text-color="#bfcbd9" active-text-color="#409EFF">
-      <template v-for="item in routers">
-        <router-link v-if="hasOneShowingChildren(item.children) && !item.children[0].children && !item.alwaysShow"
-          :to="item.path + '/' + item.children[0].path" :key="item.children[0].name">
-          <el-menu-item :index="item.path + '/' + item.children[0].path" :class="{ 'submenu-title-noDropdown': !isNest }">
-            <span v-if="item.children[0].meta && item.children[0].meta.title" slot="title">{{ item.children[0].meta.title
-            }}</span>
-          </el-menu-item>
-        </router-link>
-        <el-submenu v-else :index="item.name || item.path" :key="item.name">
-          <template slot="title">
-            <span v-if="item.meta && item.meta.title" slot="title">{{ item.meta.title }}</span>
-          </template>
-
-          <template v-for="child in item.children">
-            <el-menu-item v-if="!child.hidden && child.children && child.children.length > 0" :routes="[child]"
-              :key="child.path">
-              <span v-if="child.meta && child.meta.title" slot="title">{{ child.meta.title }}</span>
-            </el-menu-item>
-            <router-link v-else :to="item.path + '/' + child.path" :key="child.name">
-              <el-menu-item :index="item.path + '/' + child.path">
-                <span v-if="child.meta && child.meta.title" slot="title">{{ child.meta.title }}</span>
-              </el-menu-item>
-            </router-link>
-          </template>
-        </el-submenu>
-      </template>
-    </el-menu>
-
-  </div>
+  <el-card class="form-container" shadow="never">
+    <div v-for="(cate, index) in allResourceCate" :class="index === 0 ? 'top-line' : null" :key="'cate' + cate.id">
+      <el-row class="table-layout" style="background: #F2F6FC;">
+        <el-checkbox v-model="cate.checked" :indeterminate="isIndeterminate(cate.id)"
+          @change="handleCheckAllChange(cate)">
+          {{ cate.name }}
+        </el-checkbox>
+      </el-row>
+      <el-row class="table-layout">
+        <el-col :span="8" v-for="resource in getResourceByCate(cate.id)" :key="resource.id" style="padding: 4px 0">
+          <el-checkbox v-model="resource.checked" @change="handleCheckChange(resource)">
+            {{ resource.name }}
+          </el-checkbox>
+        </el-col>
+      </el-row>
+    </div>
+    <div style="margin-top: 20px" align="center">
+      <el-button type="primary" @click="handleSave()">保存</el-button>
+      <el-button @click="handleClear()">清空</el-button>
+    </div>
+  </el-card>
 </template>
-<script lang="ts" setup>
-import {
-  Document,
-  Menu as IconMenu,
-  Location,
-  Setting,
-} from '@element-plus/icons-vue'
-import { useGetters } from "@/store/useGetters.js";
-import { ref, onMounted, computed } from "vue";
-import { useStore, mapGetters } from 'vuex';
-import CircularJSON from 'circular-json'// JSON格式转化：
-const isActive = ref(false);
-const awesome = ref(false);
-const activeIndex = ref("1");
-const activeIndex2 = ref("1");
-const handleSelect = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
-};
-onMounted(() => {
-  console.log("挂载后");
-})
+<script>
+import { fetchAllResourceList } from '@/api/resource';
+import { listAllCate } from '@/api/resourceCategory';
+import { allocResource, listResourceByRole } from '@/api/role';
 
-//计算属性的使用
-const reverseMsg = computed(() => {
-  // ...mapGetters(['sidebar', 'routers']),
-  return "test1243"
-});
+export default {
+  name: "allocResource",
+  data() {
+    return {
+      roleId: null,
+      allResource: null,
+      allResourceCate: null
+    };
+  },
+  created() {
+    this.roleId = this.$route.query.roleId;
+    this.getAllResourceCateList();
+  },
+  methods: {
+    getAllResourceList() {
+      fetchAllResourceList().then(response => {
+        this.allResource = response.data;
+        for (let i = 0; i < this.allResource.length; i++) {
+          this.allResource[i].checked = false;
+        }
+        this.getResourceByRole(this.roleId);
+      });
+    },
+    getAllResourceCateList() {
+      listAllCate().then(response => {
+        this.allResourceCate = response.data;
+        for (let i = 0; i < this.allResourceCate.length; i++) {
+          this.allResourceCate[i].checked = false;
+        }
+        this.getAllResourceList();
+      });
+    },
 
-const $store = useStore()
-const routers = computed(() => $store.getters.routers)
+    getResourceByCate(categoryId) {
+      let cateResource = [];
+      if (this.allResource == null) return null;
+      for (let i = 0; i < this.allResource.length; i++) {
+        let resource = this.allResource[i];
+        if (resource.categoryId === categoryId) {
+          cateResource.push(resource);
+        }
+      }
+      return cateResource;
+    },
 
-//let menuNode = CircularJSON.stringify(routers)
+    getResourceByRole(roleId) {
+      listResourceByRole(roleId).then(response => {
+        let allocResource = response.data;
+        this.allResource.forEach(item => {
+          item.checked = this.getResourceChecked(item.id, allocResource);
+        });
+        this.allResourceCate.forEach(item => {
+          item.checked = this.isAllChecked(item.id);
+        });
+        this.$forceUpdate();
+      });
+    },
 
-//const routers = computed(() => useGetters(['routers']))
+    getResourceChecked(resourceId, allocResource) {
+      if (allocResource == null || allocResource.length === 0) return false;
+      for (let i = 0; i < allocResource.length; i++) {
+        if (allocResource[i].id === resourceId) {
+          return true;
+        }
+      }
+      return false;
+    },
 
-//console.log("routes:::"+menuNode);
-
-function hasOneShowingChildren(children) {
-  if (children != null) {
-    const showingChildren = children.filter(item => {
-      return !item.hidden
-    })
-    if (showingChildren.length === 1) {
-      return true
-    }
-    return false
+    isAllChecked(categoryId) {
+      let cateResources = this.getResourceByCate(categoryId);
+      if (cateResources == null) return false;
+      let checkedCount = 0;
+      for (let i = 0; i < cateResources.length; i++) {
+        if (cateResources[i].checked === true) {
+          checkedCount++;
+        }
+      }
+      if (checkedCount === 0) {
+        return false;
+      }
+      return checkedCount === cateResources.length;
+    },
+    isIndeterminate(categoryId) {
+      let cateResources = this.getResourceByCate(categoryId);
+      if (cateResources == null) return false;
+      let checkedCount = 0;
+      for (let i = 0; i < cateResources.length; i++) {
+        if (cateResources[i].checked === true) {
+          checkedCount++;
+        }
+      }
+      return !(checkedCount === 0 || checkedCount === cateResources.length);
+    },
+    handleCheckAllChange(cate) {
+      let cateResources = this.getResourceByCate(cate.id);
+      for (let i = 0; i < cateResources.length; i++) {
+        cateResources[i].checked = cate.checked;
+      }
+      this.$forceUpdate();
+    },
+    handleCheckChange(resource) {
+      this.allResourceCate.forEach(item => {
+        if (item.id === resource.categoryId) {
+          item.checked = this.isAllChecked(resource.categoryId);
+        }
+      });
+      this.$forceUpdate();
+    },
+    handleSave() {
+      this.$confirm('是否分配资源？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        let checkedResourceIds = new Set();
+        if (this.allResource != null && this.allResource.length > 0) {
+          this.allResource.forEach(item => {
+            if (item.checked) {
+              checkedResourceIds.add(item.id);
+            }
+          });
+        }
+        let params = new URLSearchParams();
+        params.append("roleId", this.roleId);
+        params.append("resourceIds", Array.from(checkedResourceIds));
+        allocResource(params).then(response => {
+          this.$message({
+            message: '分配成功',
+            type: 'success',
+            duration: 1000
+          });
+          this.$router.back();
+        })
+      })
+    },
+    handleClear() {
+      this.allResourceCate.forEach(item => {
+        item.checked = false;
+      });
+      this.allResource.forEach(item => {
+        item.checked = false;
+      });
+      this.$forceUpdate();
+    },
   }
-  return false
-
 }
-
 
 </script>
 
-<style>
-th,
-tr,
-td {
-  font-size: 14px;
-  font-weight: 400;
-  color: #1d1a1a;
-  line-height: 30px;
+<style scoped>
+.table-layout {
+  padding: 20px;
+  border-left: 1px solid #DCDFE6;
+  border-right: 1px solid #DCDFE6;
+  border-bottom: 1px solid #DCDFE6;
+}
+
+.top-line {
+  border-top: 1px solid #DCDFE6;
 }
 </style>
