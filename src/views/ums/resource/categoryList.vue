@@ -93,6 +93,9 @@ export default {
       listAllCate({}).then(response => {
         this.listLoading = false;
         this.list = response.data;
+      }, error => {
+        this.listLoading = false;
+        this.list = [];
       });
     },
     handleDialogConfirm() {

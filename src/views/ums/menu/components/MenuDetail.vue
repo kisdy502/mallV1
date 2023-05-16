@@ -15,7 +15,7 @@
             </el-form-item>
             <el-form-item label="前端图标：" prop="icon">
                 <el-input v-model="menu.icon" style="width: 80%"></el-input>
-                <svg-icon style="margin-left: 8px" :name="menu.icon"></svg-icon>
+                <svg-icon style="margin-left: 8px" :icon-class="menu.icon"></svg-icon>
             </el-form-item>
             <el-form-item label="是否显示：">
                 <el-radio-group v-model="menu.hidden">
@@ -88,6 +88,47 @@ export default {
             fetchList(0, { pageSize: 100, pageNum: 1 }).then(response => {
                 this.selectMenuList = response.data.list;
                 this.selectMenuList.unshift({ id: 0, title: '无上级菜单' });
+            });
+        },
+        onSubmit(formName) {
+            this.$refs[formName].validate((valid) => {
+                if (valid) {
+                    this.$confirm('是否提交数据', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        if (this.isEdit) {
+                            updateMenu(this.$route.query.id, this.menu).then(response => {
+                                this.$message({
+                                    message: '修改成功',
+                                    type: 'success',
+                                    duration: 1000
+                                });
+                                this.$router.back();
+                            });
+                        } else {
+                            createMenu(this.menu).then(response => {
+                                this.$refs[formName].resetFields();
+                                this.resetForm(formName);
+                                this.$message({
+                                    message: '提交成功',
+                                    type: 'success',
+                                    duration: 1000
+                                });
+                                this.$router.back();
+                            });
+                        }
+                    });
+
+                } else {
+                    this.$message({
+                        message: '验证失败',
+                        type: 'error',
+                        duration: 1000
+                    });
+                    return false;
+                }
             });
         },
         resetForm(formName) {

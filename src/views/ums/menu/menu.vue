@@ -23,7 +23,7 @@
           <template #default="scope">{{ scope.row.name }}</template>
         </el-table-column>
         <el-table-column label="前端图标" width="100" align="center">
-          <template #default="scope"><svg-icon :name="scope.row.icon"></svg-icon></template>
+          <template #default="scope"><svg-icon :icon-class="scope.row.icon"></svg-icon></template>
         </el-table-column>
         <el-table-column label="是否显示" width="100" align="center">
           <template #default="scope">
@@ -179,16 +179,6 @@ export default {
       this.getList();
     }
   },
-  filters: {
-
-    disableNextLevel(value) {
-      if (value === 0) {
-        return false;
-      } else {
-        return true;
-      }
-    }
-  }
 }
 
 </script>

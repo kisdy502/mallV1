@@ -21,8 +21,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "allowJs": true,
     "types": [
-      "vite-plugin-svg-icons/client"
+      // "vite-plugin-svg-icons/client"
     ]
   },
   "include": [

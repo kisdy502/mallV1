@@ -1,44 +1,41 @@
 <template>
-  <svg class="svg-icon" aria-hidden="true">
-    <use :href="symbolId" :fill="color" />
+  <svg :class="svgClass" aria-hidden="true" :fill="iconColor">
+    <use :xlink:href="iconName"></use>
   </svg>
 </template>
-  
-<script>
-import { defineComponent, computed } from 'vue'
-
-export default defineComponent({
-  name: 'SvgIcon',
-  props: {
-    prefix: {
-      type: String,
-      default: 'icon',
-    },
-    name: {
-      type: String,
-      required: true,
-    },
-    color: {
-      type: String,
-      default: '#CCCCCC',
-    },
+<script setup lang="ts">
+import { defineProps, computed } from "vue";
+const props = defineProps({
+  iconClass: {
+    type: String,
+    required: true,
   },
-  setup(props) {
-    const symbolId = computed(() => `#${props.prefix}-${props.name}`)
-    return { symbolId }
-
-
+  className: {
+    type: String,
+    default: "",
   },
-})
+  iconColor: {
+    type: String,
+    default: "CurrentColor",
+  },
+});
+const iconName = computed(() => `#icon-${props.iconClass}`);
+const svgClass = computed(() => {
+  if (props.className) {
+    return "svg-icon " + props.className;
+  } else {
+    return "svg-icon";
+  }
+});
 </script>
 
+ 
 <style scoped>
 .svg-icon {
-  width: 1.2em;
-  height: 1.2em;
-  vertical-align: -0.18em;
+  /* svg 图标默认宽高，根据个人使用情况自行调整 */
+  width: 20px;
+  height: 20px;
   fill: currentColor;
   overflow: hidden;
-  margin-right: 16px;
 }
 </style>

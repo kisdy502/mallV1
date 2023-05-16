@@ -153,6 +153,10 @@ export default {
         this.listLoading = false;
         this.list = response.data.list;
         this.total = response.data.total;
+      }, error => {
+        this.listLoading = false;
+        this.list = [];
+        this.total = 0;
       });
     },
     getCateList() {
@@ -163,6 +167,8 @@ export default {
           this.categoryOptions.push({ label: cate.name, value: cate.id });
         }
         this.defaultCategoryId = cateList[0].id;
+      }, error => {
+
       })
     },
     handleAdd() {

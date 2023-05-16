@@ -1,4 +1,7 @@
 #app {
+  .horizontal-collapse-transition {
+    transition: 0s width ease-in-out, 0s padding-left ease-in-out, 0s padding-right ease-in-out;
+  }
 
   .left-nav {
     transition: width .28s;
@@ -18,6 +21,15 @@
       width: 100% !important;
     }
 
+    a {
+      display: inline-block;
+      width: 100%;
+    }
+
+    .svg-icon {
+      margin-right: 16px;
+    }
+
   }
 
 
@@ -33,7 +45,7 @@
     border: none;
   }
 
-  .hide-left-nav {
+  .hideSidebar {
     .left-nav {
       width: 36px;
     }
@@ -41,8 +53,49 @@
     .main-container {
       margin-left: 36px;
     }
+
+    .submenu-title-noDropdown {
+      padding-left: 10px !important;
+      position: relative;
+
+      .el-tooltip {
+        padding: 0 10px !important;
+      }
+    }
+
+    .el-submenu {
+      &>.el-submenu__title {
+        padding-left: 10px !important;
+
+        &>span {
+          height: 0;
+          width: 0;
+          overflow: hidden;
+          visibility: hidden;
+          display: inline-block;
+        }
+
+        .el-submenu__icon-arrow {
+          display: none;
+        }
+      }
+    }
   }
 
+
+  .left-nav .nest-menu .el-submenu>.el-submenu__title,
+  .left-nav .el-submenu .el-menu-item {
+    min-width: 180px !important;
+    background-color: $subMenuBg !important;
+
+    &:hover {
+      background-color: $menuHover !important;
+    }
+  }
+
+  .el-menu--collapse .el-menu .el-submenu {
+    min-width: 180px !important;
+  }
 
   //  // 侧边栏
   // .sidebar-container {
@@ -116,27 +169,30 @@
   // }
 
   // //适配移动端
-  // .mobile {
-  //   .main-container {
-  //     margin-left: 0px;
-  //   }
-  //   .sidebar-container {
-  //     top: 50px;
-  //     transition: transform .28s;
-  //     width: 180px !important;
-  //   }
-  //   &.hideSidebar {
-  //     .sidebar-container {
-  //       transition-duration: 0.3s;
-  //       transform: translate3d(-180px, 0, 0);
-  //     }
-  //   }
-  // }
+  .mobile {
+    .main-container {
+      margin-left: 0px;
+    }
 
-  // .withoutAnimation {
-  //   .main-container,
-  //   .sidebar-container {
-  //     transition: none;
-  //   }
-  // }
+    .left-nav {
+      top: 50px;
+      transition: transform .28s;
+      width: 180px !important;
+    }
+
+    &.hideSidebar {
+      .left-nav {
+        transition-duration: 0.3s;
+        transform: translate3d(-180px, 0, 0);
+      }
+    }
+  }
+
+  .withoutAnimation {
+
+    .main-container,
+    .left-nav {
+      transition: none;
+    }
+  }
 }
