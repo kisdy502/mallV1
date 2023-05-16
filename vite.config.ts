@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 
 import { resolve, join } from 'path'
 import path from 'path'
-import {createSvgIconsPlugin} from 'vite-plugin-svg-icons';
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
@@ -15,12 +15,14 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
   console.log('环境变量------', env)
   console.log('文件路径（ process.cwd()）------', root)
   console.log('文件路径（dirname）------', __dirname + '/src')
+  console.log('mode------', env.VITE_NODE_ENVç)
 
 
 
   return {
     root, //项目根目录（index.html 文件所在的位置） 默认： process.cwd()
-    base: '/', //  开发或生产环境服务的公共基础路径：默认'/'   1、绝对 URL 路径名： /foo/；  2、完整的 URL： https://foo.com/； 3、空字符串或 ./（用于开发环境）
+    base: env.VITE_MODE === 'production' ? './' : '/',
+    //base: '/', //  开发或生产环境服务的公共基础路径：默认'/'   1、绝对 URL 路径名： /foo/；  2、完整的 URL： https://foo.com/； 3、空字符串或 ./（用于开发环境）
     publicDir: resolve(__dirname, './dist'), //默认'public'  作为静态资源服务的文件夹  (打包public文件夹会没有，里面得东西会直接编译在dist文件下)
     assetsInclude: resolve(__dirname, './src/assets'), // 静态资源处理
 
@@ -38,6 +40,15 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
 
     define: {
       __APP_ENV__: env.APP_ENV,
+    },
+    build: {
+      sourcemap: false, // 不生成 source map 
+      terserOptions: {
+        compress: { // 打包时清除 console 和 debug 相关代码
+          drop_console: true,
+          drop_debugger: true,
+        },
+      },
     },
     // ******开发服务器配置******
     server: {
