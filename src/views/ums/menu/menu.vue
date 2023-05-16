@@ -137,10 +137,11 @@ export default {
       }, error => {
         console.log("请求出错:" + error)
         this.listLoading = false;
-        this.$message({
-          type: 'error',
-          message: '接口出错:' + error.message
-        });
+        //全局处理了，这里不需要再处理
+        // this.$message({
+        //   type: 'error',
+        //   message: '接口出错:' + error.message
+        // });
         this.getList();
       });
     },
